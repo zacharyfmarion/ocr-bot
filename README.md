@@ -1,5 +1,7 @@
 # OCR Bot
 
+![Bot GIF](http://g.recordit.co/TmTBdWMkzx.gif)
+
 > This is a messenger bot for recognizing text in an image file.
 
 ## Installation
