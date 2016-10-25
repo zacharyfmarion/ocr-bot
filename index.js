@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
 var fs = require('fs')
+const sleep = require('sleep')
 const Tesseract = require('tesseract.js')
 var app = express()
 
@@ -84,7 +85,14 @@ function sendMultipleMessages(sender, text) {
     text = text.substring(320)
   } 
   messages.push(text) 
-  messages.forEach(message => sendTextMessage(sender, message))
+  messages.forEach(message => {
+    sendTextMessage(sender, message)
+    // we want to sleep the node process so that 
+    // the requests don't get sent in the wrong order
+    // TODO: Make this less hacky...not sure how to 
+    //  chain async requests in order
+    sleep.sleep(1)
+  })
 }
 
 /**
