@@ -1,3 +1,4 @@
+// IMPORTS
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
@@ -6,6 +7,7 @@ const sleep = require('sleep')
 const Tesseract = require('tesseract.js')
 var app = express()
 
+// Setting up the app
 const PORT = process.env.PORT || 8445;
 
 app.set('port', (process.env.PORT || 8000));
@@ -34,6 +36,11 @@ app.listen(app.get('port'), function() {
   console.log('running on port', app.get('port'))
 })
 
+/**
+ * This is the webhook that the messenger bot posts the messages 
+ * to...here we first check that the message is an image file and 
+ * then recognize the image and return the text
+ */
 app.post('/webhook/', function (req, res) {
   messaging_events = req.body.entry[0].messaging
   for (i = 0; i < messaging_events.length; i++) {
@@ -47,17 +54,7 @@ app.post('/webhook/', function (req, res) {
         const file = attachments[0]
         // recognise stuff with tesseract
         if (file.type == 'image') {
-          sendTextMessage(sender, 'Queing the recognition job...') 
-          const path = __dirname = '/tmp/image'
-          downloadImage(file.payload.url, path, () => {
-            Tesseract.recognize(path)
-              .progress(message => console.log(message))
-              .catch(err => console.error(err))
-              .then(result => {
-                sendMultipleMessages(sender, result.text) 
-              })
-              .finally(resultOrError => console.log(resultOrError))
-          })   
+          recognizeImage(file, sender)
         } else {
           sendTextMessage(sender, 'We only accept image files') 
         }
@@ -68,6 +65,27 @@ app.post('/webhook/', function (req, res) {
   }
   res.sendStatus(200)
 })
+
+/**
+ * Download and recognize the uploaded image file
+ * and then dislay the result
+ * @param {String} file - The messenger file object
+ * @param {String} path - the path to write the image to
+ * @param {String} sender - the id of the sender
+ */
+function recognizeImage(file, sender) {
+  sendTextMessage(sender, 'Queing the recognition job...') 
+  const path = __dirname = '/tmp/image'
+  downloadImage(file.payload.url, path, () => {
+    Tesseract.recognize(path)
+      .progress(message => console.log(message))
+      .catch(err => console.error(err))
+      .then(result => {
+        sendMultipleMessages(sender, result.text) 
+      })
+      .finally(resultOrError => console.log(resultOrError))
+  })   
+}
 
 // get the messenger token
 var token = process.env.token 
